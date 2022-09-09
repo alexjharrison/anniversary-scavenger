@@ -35,7 +35,11 @@ onMounted(() => {
     window.location.href = window.location.origin;
   }
   if (location) {
-    state.value.locationCount = Number(location);
+    state.value = {
+      locationCount: Number(location),
+      hasStarted: true,
+      isTraveling: true,
+    };
     window.location.href = window.location.origin;
   }
 });
