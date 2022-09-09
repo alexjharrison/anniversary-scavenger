@@ -19,7 +19,7 @@ import { computed } from "@vue/reactivity";
 import { onBeforeUnmount, onMounted, ref, watchEffect } from "vue";
 
 const emit = defineEmits(["close"]);
-const bound = 0.0008;
+const bound = 10; //meters
 const orientationAbsolute = ref(0);
 
 const img = computed(

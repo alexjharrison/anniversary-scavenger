@@ -25,12 +25,17 @@ import Reminisce from "./views/Reminisce.vue";
 onMounted(() => {
   const urlParams = new URLSearchParams(window.location.search);
   const shouldReset = urlParams.get("reset");
+  const location = urlParams.get("location");
   if (shouldReset) {
     state.value = {
       hasStarted: false,
       locationCount: 0,
       isTraveling: true,
     };
+    window.location.href = window.location.origin;
+  }
+  if (location) {
+    state.value.locationCount = Number(location);
     window.location.href = window.location.origin;
   }
 });

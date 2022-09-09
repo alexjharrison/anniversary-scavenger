@@ -22,9 +22,3 @@
 <script setup lang="ts">
 const emit = defineEmits(["start"]);
 </script>
-
-<style scoped>
-img {
-  /* width: 80%; */
-}
-</style>
