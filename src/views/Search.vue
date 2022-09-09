@@ -1,9 +1,13 @@
 <template>
-  <div>
-    <Arrow :angle="angle.theta" />
-    <p v-for="(val, key) in angle">{{ key }}: {{ val }}</p>
-    <p>{{ orientationAbsolute }}</p>
-    <p>{{ currentTarget }}</p>
+  <div class="text-center">
+    <Arrow :angle="space.theta" />
+    <p class="-mt-5 mb-12 text-lg">{{ Math.round(space.distance) }} meters</p>
+    <div class="bg-purple-500 w-80 mx-auto py-3 px-2 rounded-lg">
+      <h2 class="text-5xl mb-3">Next Stop</h2>
+      <p class="text-2xl font-light">{{ currentTarget.name }}</p>
+    </div>
+    <img class="h-40 mx-auto mt-8" :src="img" :alt="currentTarget.name" />
+    <button @click="emit('close')">click</button>
   </div>
 </template>
 
@@ -12,10 +16,19 @@ import Arrow from "../components/Arrow.vue";
 import { currentTarget, state } from "../composables/state";
 import { useGeolocation } from "@vueuse/core";
 import { computed } from "@vue/reactivity";
-import { onBeforeUnmount, onMounted, ref } from "vue";
+import { onBeforeUnmount, onMounted, ref, watchEffect } from "vue";
 
+const emit = defineEmits(["close"]);
 const bound = 0.0008;
 const orientationAbsolute = ref(0);
+
+const img = computed(
+  () =>
+    new URL(
+      `../assets/img/duke/${currentTarget.value.targetImg}`,
+      import.meta.url
+    ).href
+);
 
 /**
  * When enabled will constantly ping current location
@@ -27,7 +40,7 @@ const { coords } = useGeolocation({
   timeout: 10000,
 });
 
-const angle = computed(() => {
+const space = computed(() => {
   const beta = (orientationAbsolute.value - 270 + 360) % 360;
 
   const dx = currentTarget.value.long - coords.value.longitude;
@@ -49,6 +62,12 @@ const angle = computed(() => {
     beta,
     coords: { y: coords.value.latitude, x: coords.value.longitude },
   };
+});
+
+watchEffect(() => {
+  if (space.value.distance < bound) {
+    emit("close");
+  }
 });
 
 onMounted(() => {
