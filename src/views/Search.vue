@@ -1,27 +1,21 @@
 <template>
   <div>
-    <Arrow :angle="angle.angle" />
-    <p>angle: {{ angle.angle }}</p>
-    <p>alpha: {{ alpha }}</p>
-    <p>tau: {{ angle.tau }}</p>
-    <p>distance: {{ distance }}</p>
-    <p>x: {{ angle.x }}</p>
-    <p>y: {{ angle.y }}</p>
-    <p>theta {{ angle.theta }}</p>
-    <p>State: {{ state }}</p>
-    <p>Current Location: {{ currentTarget }}</p>
+    <Arrow :angle="angle.theta" />
+    <p v-for="(val, key) in angle">{{ key }}: {{ val }}</p>
+    <p>{{ orientationAbsolute }}</p>
+    <p>{{ currentTarget }}</p>
   </div>
 </template>
 
 <script setup lang="ts">
-import { useReactiveLocation } from "../composables/location";
 import Arrow from "../components/Arrow.vue";
 import { currentTarget, state } from "../composables/state";
-import { useDeviceOrientation, useGeolocation } from "@vueuse/core";
+import { useGeolocation } from "@vueuse/core";
 import { computed } from "@vue/reactivity";
-import { watchEffect } from "vue";
+import { onBeforeUnmount, onMounted, ref } from "vue";
 
 const bound = 0.0008;
+const orientationAbsolute = ref(0);
 
 /**
  * When enabled will constantly ping current location
@@ -33,43 +27,40 @@ const { coords } = useGeolocation({
   timeout: 10000,
 });
 
-const { alpha } = useDeviceOrientation();
-
-const tau = computed(() => 360 - (alpha.value || 0) - 90);
-
-const y = computed(() =>
-  Math.abs(coords.value.latitude - currentTarget.value.lat)
-);
-const x = computed(() =>
-  Math.abs(coords.value.longitude - currentTarget.value.long)
-);
-
-const theta = computed(() => {
-  const theta = Math.tan(x.value / y.value) * Math.PI * 180;
-  return isNaN(theta) ? 0 : Math.tan(x.value / y.value) * Math.PI * 180;
-});
-const distance = computed(() => {
-  return Math.sqrt(x.value ** 2 + y.value ** 2);
-});
-
 const angle = computed(() => {
-  const tau = 360 - (alpha.value || 0) - 90;
+  const beta = (orientationAbsolute.value - 270 + 360) % 360;
 
-  const y = Math.abs(coords.value.latitude - currentTarget.value.lat);
-  const x = Math.abs(coords.value.longitude - currentTarget.value.long);
+  const dx = currentTarget.value.long - coords.value.longitude;
+  const dy = currentTarget.value.lat - coords.value.latitude;
 
-  const theta = 90 - (Math.tan(y / x) * 180) / Math.PI;
-  console.log({ tau, theta, x, y });
+  const alpha =
+    ((2 * Math.atan(dy / (dx + Math.sqrt(dx ** 2 + dy ** 2))) * 180) / Math.PI +
+      360) %
+    360;
+  const theta = beta - alpha;
+  const distance = Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2)) * 111139;
   return {
-    angle: 360 - (tau - theta),
-    tau,
-    x,
-    y,
+    dx,
+    dy,
     theta,
+    distance,
+    orientationAbsolute,
+    alpha,
+    beta,
+    coords: { y: coords.value.latitude, x: coords.value.longitude },
   };
 });
-// const angle = computed(() => {
-//   console.log({ tau, theta });
-//   return (tau.value - theta.value) % 360;
-// });
+
+onMounted(() => {
+  // @ts-ignore
+  window.addEventListener("deviceorientationabsolute", saveOrientation);
+});
+onBeforeUnmount(() => {
+  // @ts-ignore
+  window.removeEventListener("deviceorientationabsolute", saveOrientation);
+});
+
+function saveOrientation(evt: DeviceOrientationEvent) {
+  orientationAbsolute.value = evt.alpha || 0;
+}
 </script>

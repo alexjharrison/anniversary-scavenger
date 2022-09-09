@@ -1,5 +1,5 @@
 import { useLocalStorage } from "@vueuse/core";
-import { computed } from "vue";
+import { computed, reactive, ref } from "vue";
 import { locations } from "../assets/locations";
 import { questions } from "../assets/questions";
 
@@ -8,7 +8,14 @@ export enum Status {
   ANSWERING,
   VIEWING,
 }
-export const state = useLocalStorage("state", {
+
+//South, East, North, West
+// export const state = useLocalStorage("state", {
+//   locationCount: 2,
+//   hasStarted: false,
+//   status: Status.TRAVELING,
+// });
+export const state = ref({
   locationCount: 0,
   hasStarted: false,
   status: Status.TRAVELING,
