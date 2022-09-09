@@ -7,7 +7,7 @@
       <p class="text-2xl font-light">{{ currentTarget.name }}</p>
     </div>
     <img class="h-40 mx-auto mt-8" :src="img" :alt="currentTarget.name" />
-    <button @click="emit('close')">click</button>
+    <!-- <button @click="emit('close')">click</button> -->
   </div>
 </template>
 
